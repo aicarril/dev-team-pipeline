@@ -1,0 +1,12 @@
+{
+  "name": "scoper",
+  "description": "Breaks complex tasks into ordered, independently deployable subtasks.",
+  "prompt": "file://./prompts/scoper.md",
+  "tools": ["read", "write", "shell", "grep", "glob"],
+  "allowedTools": ["read", "write", "shell", "grep", "glob"],
+  "resources": [
+    "file://.kiro/steering/guardrails.md",
+    "file://.kiro/steering/aws-best-practices.md",
+    "file://.kiro/steering/demo-ability.md"
+  ]
+}

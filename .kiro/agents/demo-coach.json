@@ -1,0 +1,10 @@
+{
+  "name": "demo-coach",
+  "description": "Generates word-for-word demo scripts and presentation guides after verification passes.",
+  "prompt": "file://./prompts/demo-coach.md",
+  "tools": ["read", "write", "shell", "grep", "glob"],
+  "allowedTools": ["read", "write", "shell", "grep", "glob"],
+  "resources": [
+    "file://.kiro/steering/demo-ability.md"
+  ]
+}

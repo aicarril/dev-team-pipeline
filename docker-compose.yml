@@ -1,0 +1,123 @@
+services:
+  orchestrator:
+    build: { context: ., dockerfile: orchestrator/Dockerfile }
+    ports: ["8420:8420"]
+    volumes: ["shared-repo:/shared-repo"]
+    environment:
+      PORT: "8420"
+      MAX_ITERATIONS: "5"
+    healthcheck:
+      test: ["CMD", "node", "-e", "const n=require('net').connect(8420,'localhost',()=>{n.end();process.exit(0)});n.on('error',()=>process.exit(1))"]
+      interval: 1s
+      timeout: 2s
+      retries: 10
+
+  scoper:
+    build: { context: ., dockerfile: Dockerfile }
+    command: >
+      chat --no-interactive --trust-all-tools --agent scoper
+      "Read /workspace/task.md. Break it into ordered subtasks that can each be
+      built, deployed, and verified independently. Write scoped-tasks.json to
+      /shared-repo/. Report each subtask for challenger review. Signal complete when done."
+    volumes: ["shared-repo:/shared-repo"]
+    environment:
+      KIRO_API_KEY: "${KIRO_API_KEY}"
+      WS_URL: "ws://orchestrator:8420"
+    depends_on:
+      orchestrator: { condition: service_healthy }
+      challenger: { condition: service_started }
+
+  builder:
+    build: { context: ., dockerfile: Dockerfile }
+    command: >
+      chat --no-interactive --trust-all-tools --agent builder
+      "Register and wait for subtask:start messages. For each subtask, read
+      /shared-repo/scoped-tasks.json for context. Build it, report every step,
+      commit, push, signal complete. Then wait for the next subtask or fix:needed."
+    volumes: ["shared-repo:/shared-repo"]
+    environment:
+      KIRO_API_KEY: "${KIRO_API_KEY}"
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+      GH_TOKEN: "${GITHUB_TOKEN}"
+      WS_URL: "ws://orchestrator:8420"
+    depends_on:
+      orchestrator: { condition: service_healthy }
+      challenger: { condition: service_started }
+
+  challenger:
+    build: { context: ., dockerfile: Dockerfile }
+    command: >
+      chat --no-interactive --trust-all-tools --agent challenger
+      "Register as challenger-1. Continuously wait for steps from any agent
+      (scoper, builder, verifier, demo-coach). Read actual files in /shared-repo/.
+      Challenge or approve each one. Keep reviewing until all containers stop."
+    volumes: ["shared-repo:/shared-repo"]
+    environment:
+      KIRO_API_KEY: "${KIRO_API_KEY}"
+      WS_URL: "ws://orchestrator:8420"
+    depends_on:
+      orchestrator: { condition: service_healthy }
+
+  deployer:
+    build: { context: ., dockerfile: Dockerfile }
+    command: >
+      chat --no-interactive --trust-all-tools --agent deployer
+      "Register as deployer-1. Read .kiro/learnings/deployer.md for past mistakes.
+      Continuously wait for deploy:request messages.
+      When received, read the code in /shared-repo/ to determine the deployment tool,
+      then deploy. Wait for all resources to be fully ready before signaling complete.
+      If another deploy:request comes, repeat."
+    volumes: ["shared-repo:/shared-repo"]
+    environment:
+      KIRO_API_KEY: "${KIRO_API_KEY}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_REGION: "${AWS_REGION:-us-east-1}"
+      WS_URL: "ws://orchestrator:8420"
+    depends_on:
+      orchestrator: { condition: service_healthy }
+
+  verifier:
+    build: { context: ., dockerfile: Dockerfile }
+    command: >
+      chat --no-interactive --trust-all-tools --agent verifier
+      "Register as verifier-1. Continuously wait for verify:request messages.
+      When received, hit every endpoint with curl, run aws cli checks.
+      Write verification-report.md to /shared-repo/.
+      For pipeline process bugs, write to .kiro/learnings/{agent}.md.
+      Push everything to GitHub.
+      Signal verify-complete with passed true if everything works, false if not.
+      If another verify:request comes, repeat."
+    volumes: ["shared-repo:/shared-repo"]
+    environment:
+      KIRO_API_KEY: "${KIRO_API_KEY}"
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+      GH_TOKEN: "${GITHUB_TOKEN}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_REGION: "${AWS_REGION:-us-east-1}"
+      WS_URL: "ws://orchestrator:8420"
+    depends_on:
+      orchestrator: { condition: service_healthy }
+
+  demo-coach:
+    build: { context: ., dockerfile: Dockerfile }
+    command: >
+      chat --no-interactive --trust-all-tools --agent demo-coach
+      "Register as demo-coach-1. Do NOTHING until you receive a demo:request message.
+      Run: node /app/ws-client.js wait --id demo-coach-1 --for demo:request
+      Only after receiving that message should you start generating the demo guide.
+      Read task.md, verification-report.md, and the code in /shared-repo/.
+      Generate DEMO-GUIDE.md, report each section for challenger review.
+      Push to GitHub and signal demo-complete."
+    volumes: ["shared-repo:/shared-repo"]
+    environment:
+      KIRO_API_KEY: "${KIRO_API_KEY}"
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+      GH_TOKEN: "${GITHUB_TOKEN}"
+      WS_URL: "ws://orchestrator:8420"
+    depends_on:
+      orchestrator: { condition: service_healthy }
+
+volumes:
+  shared-repo:

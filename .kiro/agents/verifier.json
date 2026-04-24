@@ -1,0 +1,11 @@
+{
+  "name": "verifier",
+  "description": "Post-deployment verification. Hits endpoints, runs AWS CLI, proves everything works.",
+  "prompt": "file://./prompts/verifier.md",
+  "tools": ["read", "write", "shell", "grep", "glob", "use_aws"],
+  "allowedTools": ["read", "write", "shell", "grep", "glob", "use_aws"],
+  "resources": [
+    "file://.kiro/steering/guardrails.md",
+    "file://.kiro/learnings/verifier.md"
+  ]
+}

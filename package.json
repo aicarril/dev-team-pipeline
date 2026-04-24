@@ -1,0 +1,13 @@
+{
+  "name": "dev-team-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "orchestrator": "node orchestrator/server.js",
+    "viewer": "node orchestrator/viewer.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

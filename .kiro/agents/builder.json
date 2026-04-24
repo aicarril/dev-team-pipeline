@@ -1,0 +1,13 @@
+{
+  "name": "builder",
+  "description": "Writes code and infrastructure. Receives tasks from orchestrator, reports status in real-time.",
+  "prompt": "file://./prompts/builder.md",
+  "tools": ["read", "write", "shell", "grep", "glob", "code"],
+  "allowedTools": ["read", "write", "shell", "grep", "glob", "code"],
+  "resources": [
+    "file://.kiro/steering/guardrails.md",
+    "file://.kiro/steering/aws-best-practices.md",
+    "file://.kiro/steering/demo-ability.md",
+    "file://.kiro/learnings/builder.md"
+  ]
+}

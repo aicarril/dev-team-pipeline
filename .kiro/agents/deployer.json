@@ -1,0 +1,11 @@
+{
+  "name": "deployer",
+  "description": "Deploys terraform to AWS. Runs plan, apply, collects outputs.",
+  "prompt": "file://./prompts/deployer.md",
+  "tools": ["read", "write", "shell", "grep", "glob", "use_aws"],
+  "allowedTools": ["read", "write", "shell", "grep", "glob", "use_aws"],
+  "resources": [
+    "file://.kiro/steering/guardrails.md",
+    "file://.kiro/learnings/deployer.md"
+  ]
+}

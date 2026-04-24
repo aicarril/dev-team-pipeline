@@ -1,0 +1,13 @@
+{
+  "name": "challenger",
+  "description": "Watches all task status updates. Pushes back on every decision. Antagonist by design.",
+  "prompt": "file://./prompts/challenger.md",
+  "tools": ["read", "write", "shell", "grep", "glob", "code"],
+  "allowedTools": ["read", "write", "shell", "grep", "glob", "code"],
+  "resources": [
+    "file://.kiro/steering/guardrails.md",
+    "file://.kiro/steering/aws-best-practices.md",
+    "file://.kiro/steering/demo-ability.md",
+    "file://.kiro/learnings/challenger.md"
+  ]
+}
